@@ -46,14 +46,13 @@ class Router(object):
 
                 ########## TASK 1 ##########
                 # recv packet check arp
-                log_debug("Packet: {}".format(pkt))
                 arp = pkt.get_header(Arp)
                 log_debug(" Arp: {}".format(arp))
 
                 if(arp):
                     # store the source addr
-                    if arp.senderhwaddr not in [addr[0] for addr in myaddr]:
-                        myaddr.append([arp.senderhwaddr,arp.senderprotoaddr])
+                    #if arp.senderhwaddr not in [addr[0] for addr in myaddr]:
+                    #    myaddr.append([arp.senderhwaddr,arp.senderprotoaddr])
                     # find mac by ip
                     for addr in myaddr:
                         if addr[1] == arp.targetprotoaddr:
@@ -64,8 +63,15 @@ class Router(object):
 
                 ########## END #########
 
-
                 ########## TASK 3 ##########
+                icmp = pkt.get_header(ICMP)
+
+                if(icmp.icmptype == ICMPType.EchoRequest):
+                    icmpreply = ICMP()
+                    icmpreply.icmptype = ICMPType.EchoReply
+                    icmpreply.
+
+
 
 
 
