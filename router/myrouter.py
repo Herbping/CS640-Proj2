@@ -64,12 +64,11 @@ class Router(object):
                 ########## END #########
 
                 ########## TASK 3 ##########
-                icmp = pkt.get_header(ICMP)
+                #icmp = pkt.get_header(ICMP)
 
-                if(icmp.icmptype == ICMPType.EchoRequest):
-                    icmpreply = ICMP()
-                    icmpreply.icmptype = ICMPType.EchoReply
-                    icmpreply.
+                #if(icmp.icmptype == ICMPType.EchoRequest):
+                #    icmpreply = ICMP()
+                #    icmpreply.icmptype = ICMPType.EchoReply
 
 
 
