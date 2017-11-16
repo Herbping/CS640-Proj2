@@ -24,8 +24,12 @@ def test_arp():
     # arp for router-eth0 IP addr
     arpreq = create_ip_arp_request("30:00:00:00:00:01", "192.168.1.100", "192.168.1.1")
     arpresp = create_ip_arp_reply("10:00:00:00:00:01", "30:00:00:00:00:01", "192.168.1.1", "192.168.1.100")
+    arpreq2 = create_ip_arp_request("10:00:00:00:00:01", "192.168.1.1", "192.168.1.100")
+    arpresp2 = create_ip_arp_reply("30:00:00:00:00:01", "10:00:00:00:00:01", "192.168.1.100", "192.168.1.1")
     s.expect(PacketInputEvent("router-eth0", arpreq, display=Arp), "ARP request for 192.168.1.1 should arrive on router-eth0")
     s.expect(PacketOutputEvent("router-eth0", arpresp, display=Arp), "Router should send ARP response for 192.168.1.1 on router-eth0")
+    s.expect(PacketInputEvent("router-eth0", arpreq2, display=Arp), "ARP request for 192.168.1.100 should arrive on router-eth0")
+    s.expect(PacketOutputEvent("router-eth0", arpresp2, display=Arp), "Router should send ARP response for 192.168.1.100 on router-eth0")
 
     # non-arp packet
     icmp_echo = mk_ping("ab:cd:ef:00:00:01", "10:00:00:00:00:01", "192.168.1.242", "10.10.12.34")
