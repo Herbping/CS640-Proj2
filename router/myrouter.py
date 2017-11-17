@@ -14,6 +14,18 @@ class Router(object):
         self.net = net
         # other initialization stuff here
 
+    def icmp_unreachable(self):
+        True
+
+    def icmp_timeexceeded(self):
+        True
+
+    def icmp_host_unreachable(self):
+        True
+
+    def icmp_port_unreachable(self):
+        True
+
     def router_main(self):    
         '''
         Main method for router; we stay in a loop in this method, receiving
@@ -64,11 +76,21 @@ class Router(object):
                 ########## END #########
 
                 ########## TASK 3 ##########
-                #icmp = pkt.get_header(ICMP)
+                icmp = pkt.get_header(ICMP)
 
-                #if(icmp.icmptype == ICMPType.EchoRequest):
-                #    icmpreply = ICMP()
-                #    icmpreply.icmptype = ICMPType.EchoReply
+                if icmp:
+                    if(icmp.icmptype == ICMPType.EchoRequest):
+                        icmpreply = ICMP()
+                        icmpreply.icmptype = ICMPType.EchoReply
+                        icmpreply.icmpdata = icmp.icmpdata
+                        icmpreply.icmpcode = icmp.icmpcode
+                        ipreply = IPv4()
+                        ipreply.dst = pkt.get_header(IPv4).src
+                        ipreply.protocol = IPProtocol.ICMP
+                        for intf in my_interfaces:
+                            if intf.name == dev:
+                                ipreply.src = dev
+
 
 
 
