@@ -16,6 +16,17 @@ def get_ip_from_port(interfaces, dev):
             return intf.ipaddr
     return null
 
+def get_eth_from_port(interfaces, dev):
+    for intf in interfaces:
+        if intf.name == dev:
+            return intf.ethaddr
+    return null
+
+def get_port_from_eth(interfaces, eth):
+    for intf in interfaces:
+        if intf.ethaddr == eth:
+            return intf.name
+    return null
 
 def icmp_unreachable(origpkt):
     i = origpkt.get_header_index(Ethernet)
@@ -59,14 +70,23 @@ class Router(object):
         for intf in my_interfaces:
             log_debug("My_Intf: {}".format(intf))
 
+        myeth = [intf.ethaddr for intf in my_interfaces]
+        myip = [intf.ipaddr for intf in my_interfaces]
+
+        # forwarding table
+        forwarding_table = []
+        forwarding_table_path = "forwarding_table.txt"
+        forwarding_t = open(forwarding_table_path, "r")
+        for forwarding in forwarding_t:
+            forwarding_item = forwarding.split()
+            forwarding_table.append(forwarding_item)
+
         while True:
             gotpkt = True
 
 
             try:
                 timestamp,dev,pkt = self.net.recv_packet(timeout=1.0)
-
-
 
             except NoPackets:
                 log_debug("No packets available in recv_packet")
@@ -96,6 +116,57 @@ class Router(object):
                     log_debug("My_Addr: {}".format(myaddr))
 
                 ########## END #########
+                    ########## Stage 2 ##########
+                    print("-----------stage2-----------")
+                    IP_BROADCAST = ip_address("255.255.255.255")
+                    if (pkt.get_header(Ethernet).dst in myeth) and (
+                        pkt.get_header(IPv4).dst in myip):  # packet for the router itself
+                        log_debug("Packet intended for me")
+                        continue
+
+                    ### TODO ###
+                    pkt.get_header(IPv4).ttl -= 1
+                    ### TODO ###
+
+                    destaddr = pkt.get_header(IPv4).dst
+                    for entry in forwarding_table:
+                        prefixnet = IPv4Network(entry[0] + "/" + entry[1])
+                        matches = destaddr in prefixnet
+                        # print(matches)
+                        if matches:  # sending packet to next hop
+                            out_port = entry[3]
+                            senderINTFhwaddr = get_ip_from_port(my_interfaces, out_port)
+                            senderINTFprotoaddr = get_ip_from_port(my_interfaces, out_port)
+
+                            i = 0
+                            while i < 5:
+                                i += 1
+                                arp_gotpkt = False
+                                self.net.send_packet(out_port,
+                                                     create_ip_arp_request(senderINTFhwaddr, senderINTFprotoaddr,
+                                                                           IP_BROADCAST))
+                                try:
+                                    arp_timestamp, arp_dev, arp_pkt = self.net.recv_packet(timeout=1.0)
+                                    arp_gotpkt = True
+                                except NoPackets:
+                                    log_debug("No packets available in recv_packet")
+                                    continue
+                                if arp_gotpkt:
+                                    ###TODO###
+                                    # update forwarding table
+                                    ###TODO###
+
+                                    arp = arp_pkt.get_header(Arp)
+                                    ethhead = Ethernet()
+                                    ethhead.src = arp
+                                    #
+                                    self.net.send_packet(targethwaddr, pkt)
+                                    break
+                    if matches:
+                        continue
+                    # no match in the table
+                    log_debug("Destination address does not match")
+                    ######### END ##########
 
                 ########## TASK 3 ##########
                 icmp = pkt.get_header(ICMP)

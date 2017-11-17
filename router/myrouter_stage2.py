@@ -23,7 +23,18 @@ class Router(object):
         # interfaces
         my_interfaces = self.net.interfaces()
         myaddr = [[intf.ethaddr, intf.ipaddr] for intf in my_interfaces]
+        myeth = [intf.ethaddr for intf in my_interfaces]
+        myip = [intf.ipaddr for intf in my_interfaces]
         log_debug("My_Addr: {}".format(myaddr))
+
+        # forwarding table
+        forwarding_table = []
+        forwarding_table_path = "forwarding_table.txt"
+        forwarding_t = open(forwarding_table_path, "r")
+        for forwarding in forwarding_t:
+            forwarding_item = forwarding.split()
+            forwarding_table.append(forwarding_item)
+
         while True:
             gotpkt = True
             try:
@@ -55,32 +66,28 @@ class Router(object):
                     log_debug("My_Addr: {}".format(myaddr))
                     continue
 
-					########## Stage 2 ##########
+				########## Stage 2 ##########
                 print("-----------stage2-----------")
                 IP_BROADCAST = ip_address("255.255.255.255")
-                myip = [intf.ipaddr for intf in my_interfaces]
-                if pkt.get_header(Ethernet).dst in myaddr and pkt.get_header(IPv4).dst in myip:#packet for the router itself
+                if (pkt.get_header(Ethernet).dst in myeth) and (pkt.get_header(IPv4).dst in myip):#packet for the router itself
                     log_debug ("Packet intended for me")
                     continue
+
+                ### TODO ###
                 pkt.get_header(IPv4).ttl -= 1
-                forwarding_table = []
-                forwarding_table_path = "forwarding_table.txt"
-                forwarding_t  = open(forwarding_table_path, "r")
-                for forwarding in forwarding_t:
-                    forwarding_item = forwarding.split()
-                    forwarding_table.append(forwarding_item)
+                ### TODO ###
 
                 destaddr = pkt.get_header(IPv4).dst
-                for addr in forwarding_table:
-                    prefixnet = IPv4Network(addr[0]+"/"+addr[1])
+                for entry in forwarding_table:
+                    prefixnet = IPv4Network(entry[0]+"/"+entry[1])
                     matches = destaddr in prefixnet
                     #print(matches)
-                    if matches:#sending packet to next hop
+                    if matches: #sending packet to next hop
                         senderhwaddr = pkt.get_header(Ethernet).src
                         senderprotoaddr = pkt.get_header(IPv4).src
-                        arp_dest = addr[2]
+                        out_port = entry[3]
 
-                        self.net.send_packet(arp_dest,create_ip_arp_request(senderhwaddr, senderprotoaddr,IP_BROADCAST))
+                        self.net.send_packet(out_port,create_ip_arp_request(senderhwaddr, senderprotoaddr,pkt.get_header(IPv4).dst))
                         time.sleep(1)
                         i = 0
                         while i < 5:
