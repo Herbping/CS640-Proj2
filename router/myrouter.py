@@ -9,22 +9,43 @@ import os
 import time
 from switchyard.lib.userlib import *
 
+
+def get_ip_from_port(interfaces, dev):
+    for intf in interfaces:
+        if intf.name == dev:
+            return intf.ipaddr
+    return null
+
+
+def icmp_unreachable(origpkt):
+    i = origpkt.get_header_index(Ethernet)
+    if i >= 0:
+        del origpkt[i]
+    icmp = ICMP()
+    icmp.icmptype = ICMPType.DestinationUnreachable
+    icmp.icmpdata.data = origpkt.to_bytes()[:28]
+    ip = IPv4()
+    ip.protocol = IPProtocol.ICMP
+    ip.dst = origpkt.get_header(IPv4).src
+    ip.ttl = 64
+
+
+def icmp_timeexceeded(self):
+    True
+
+
+def icmp_host_unreachable(self):
+    True
+
+
+def icmp_port_unreachable(self):
+    True
+
+
 class Router(object):
     def __init__(self, net):
         self.net = net
         # other initialization stuff here
-
-    def icmp_unreachable(self):
-        True
-
-    def icmp_timeexceeded(self):
-        True
-
-    def icmp_host_unreachable(self):
-        True
-
-    def icmp_port_unreachable(self):
-        True
 
     def router_main(self):    
         '''
@@ -35,7 +56,8 @@ class Router(object):
         # interfaces
         my_interfaces = self.net.interfaces()
         myaddr = [[intf.ethaddr, intf.ipaddr] for intf in my_interfaces]
-        log_debug("My_Addr: {}".format(myaddr))
+        for intf in my_interfaces:
+            log_debug("My_Intf: {}".format(intf))
 
         while True:
             gotpkt = True
@@ -82,14 +104,12 @@ class Router(object):
                     if(icmp.icmptype == ICMPType.EchoRequest):
                         icmpreply = ICMP()
                         icmpreply.icmptype = ICMPType.EchoReply
+                        icmpreply.icmpcode = ICMPCodeEchoReply.EchoReply
                         icmpreply.icmpdata = icmp.icmpdata
-                        icmpreply.icmpcode = icmp.icmpcode
                         ipreply = IPv4()
                         ipreply.dst = pkt.get_header(IPv4).src
                         ipreply.protocol = IPProtocol.ICMP
-                        for intf in my_interfaces:
-                            if intf.name == dev:
-                                ipreply.src = dev
+                        ipreply.src = get_ip_from_port(my_interfaces,dev)
 
 
 
