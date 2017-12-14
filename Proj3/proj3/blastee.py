@@ -6,13 +6,14 @@ from switchyard.lib.userlib import *
 from threading import *
 import time
 
-def create_ack(pkt,blaster_ip):
+def create_ack(pkt,blaster_ip,myips):
+    log_debug("received pck: {}".format(pkt))
     ack_packet_header = Ethernet() + IPv4(protocol=IPProtocol.UDP) + UDP()
     #Ethernet
     ack_packet_header[0].src = pkt.get_header(Ethernet).dst
     ack_packet_header[0].dst = pkt.get_header(Ethernet).src
     #IPv4
-    ack_packet_header[1].src = pkt.get_header(IPv4).dst
+    ack_packet_header[1].src = myips[0]
     ack_packet_header[1].dst = blaster_ip
     #seq number
     seq = ((pkt.get_header(RawPacketContents)).to_bytes())[:4]#first 4bytes/32bits
@@ -29,6 +30,7 @@ def create_ack(pkt,blaster_ip):
 def switchy_main(net):
     my_interfaces = net.interfaces()
     mymacs = [intf.ethaddr for intf in my_interfaces]
+    myips = [intf.ipaddr for intf in my_interfaces]
 
     params_path = "blastee_params.txt"
     params = open(params_path,"r").read().split()
@@ -56,7 +58,7 @@ def switchy_main(net):
         if gotpkt:
             log_debug("I got a packet from {}".format(dev))
             log_debug("Pkt: {}".format(pkt))
-            ack_packet = create_ack(pkt,blaster_ip)
+            ack_packet = create_ack(pkt,blaster_ip,myips)
             net.send_packet(dev,ack_packet)
 
     net.shutdown()
