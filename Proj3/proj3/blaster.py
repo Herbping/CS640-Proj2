@@ -113,7 +113,7 @@ def switchy_main(net):
             if time.time()-t > timeout/1000.0:
                 timeout_num += 1
                 n = lhs
-                while n <= rhs:
+                while (n <= rhs) and (n <= num):
                     if n not in ack_list:
                         resend_num += 1
                         send_pkt = create_pkt(blastee_ip,mymacs,myips,n,length)
