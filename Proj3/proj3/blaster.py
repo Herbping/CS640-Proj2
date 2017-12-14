@@ -93,6 +93,8 @@ def switchy_main(net):
                 lhs += 1
                 while lhs in ack_list:
                     lhs += 1
+                    if lhs == num:
+                        break
                 ack_list = [x for x in ack_list if x>lhs]
             elif (ack_seq not in ack_list) and (ack_seq >= lhs):
                 ack_list.append(ack_seq)
