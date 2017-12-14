@@ -56,7 +56,8 @@ def switchy_main(net):
 
     timeout_num = 0
     resend_num = 0
-    lhs = rhs = 1
+    lhs = 1 # the least index of sent but not Acked packet
+    rhs = 0 # the greatest index of sent packet
     ack_list = []
     t = time.time()
     start = None
@@ -64,10 +65,10 @@ def switchy_main(net):
         if lhs == num:
             break
 
-        while (rhs-lhs)<sw-1 and rhs<=num:
+        while (rhs-lhs)<sw-1 and rhs<num:
+            rhs+=1
             send_pkt = create_pkt(blastee_ip,mymacs,myips,rhs,length)
             net.send_packet("blaster-eth0",send_pkt)
-            rhs+=1
 
         gotpkt = True
         try:
