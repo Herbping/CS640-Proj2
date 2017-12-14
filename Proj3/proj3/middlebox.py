@@ -46,6 +46,7 @@ def switchy_main(net):
             If not, modify headers & send to blastee
             '''
             random_rate = random.uniform(0,1)
+            log_debug("--------------------------rng: {}".format(random_rate))
             if random_rate>drop_rate:
                 pkt.get_header(Ethernet).src = "40:00:00:00:00:02"#middlebox-eth1
                 pkt.get_header(Ethernet).dst = "20:00:00:00:00:01"#blastee
