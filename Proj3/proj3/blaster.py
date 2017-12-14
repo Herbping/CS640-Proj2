@@ -29,6 +29,9 @@ def switchy_main(net):
     mymacs = [intf.ethaddr for intf in my_intf]
     myips = [intf.ipaddr for intf in my_intf]
 
+    log_debug("MyMacs: {}".format(mymacs))
+    log_debug("MyIps: {}".format(myips))
+
     params_path = "blaster_params.txt"
     params = open(params_path,"r").read().split()
     blastee_ip = None
@@ -81,7 +84,9 @@ def switchy_main(net):
 
         if gotpkt:
             log_debug("I got a packet")
+            log_debug("AckList: {}".format(ack_list))
             ack_seq = int.from_bytes(((pkt.get_header(RawPacketContents)).to_bytes())[:4],'big')
+            log_debug("Got Ack: {}".format(ack_seq))
             if ack_seq == lhs:
                 lhs += 1
                 while lhs in ack_list:
@@ -90,7 +95,7 @@ def switchy_main(net):
             elif ack_seq not in ack_list:
                 ack_list.append(ack_seq)
             t = time.time()
-            #print(lhs,rhs)
+            log_debug("LHS RHS: {} {}".format(lhs,rhs))
 
         else:
             log_debug("Didn't receive anything")
@@ -108,10 +113,11 @@ def switchy_main(net):
             if time.time()-t > timeout/1000.0:
                 timeout_num += 1
                 n = lhs
-                while n <= rhs and (n not in ack_list):
-                    resend_num += 1
-                    send_pkt = create_pkt(blastee_ip,mymacs,myips,n,length)
-                    net.send_packet("blaster-eth0",send_pkt)
+                while n <= rhs:
+                    if n not in ack_list:
+                        resend_num += 1
+                        send_pkt = create_pkt(blastee_ip,mymacs,myips,n,length)
+                        net.send_packet("blaster-eth0",send_pkt)
                     n += 1
 
     print("Total TX time (in seconds): "+str(timestamp-start))
