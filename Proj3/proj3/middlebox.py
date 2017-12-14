@@ -14,6 +14,8 @@ def switchy_main(net):
     myips = [intf.ipaddr for intf in my_intf]
 
     params_path = "middlebox_params.txt"
+    got = 0
+    drop = 0
     params = open(params_path,"r").read().split()
     drop_rate = 1
     for i in range(len(params)):
@@ -37,6 +39,7 @@ def switchy_main(net):
 
         if dev == "middlebox-eth0":
             log_debug("Received from blaster")
+            got += 1
             '''
             Received data packet
             Should I drop it?
@@ -47,6 +50,9 @@ def switchy_main(net):
                 pkt.get_header(Ethernet).src = "40:00:00:00:00:02"#middlebox-eth1
                 pkt.get_header(Ethernet).dst = "20:00:00:00:00:01"#blastee
                 net.send_packet("middlebox-eth1", pkt)
+            else:
+                drop += 1
+                log_debug("drop rate: {}".format(drop/got))
         elif dev == "middlebox-eth1":
             log_debug("Received from blastee")
             '''
