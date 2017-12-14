@@ -91,6 +91,8 @@ def switchy_main(net):
             log_debug("Got Ack: {}".format(ack_seq))
             if ack_seq == lhs:
                 lhs += 1
+                if lhs == num:
+                    break
                 while lhs in ack_list:
                     lhs += 1
                     if lhs == num:
