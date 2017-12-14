@@ -85,6 +85,7 @@ def switchy_main(net):
         if gotpkt:
             log_debug("I got a packet")
             log_debug("AckList: {}".format(ack_list))
+            log_debug("LHS RHS: {} {}".format(lhs,rhs))
             ack_seq = int.from_bytes(((pkt.get_header(RawPacketContents)).to_bytes())[:4],'big')
             log_debug("Got Ack: {}".format(ack_seq))
             if ack_seq == lhs:
