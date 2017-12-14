@@ -52,7 +52,7 @@ def switchy_main(net):
                 net.send_packet("middlebox-eth1", pkt)
             else:
                 drop += 1
-                log_debug("drop rate: {}".format(drop/got))
+                log_debug("--------------------------drop rate: {}".format(drop/got))
         elif dev == "middlebox-eth1":
             log_debug("Received from blastee")
             '''
